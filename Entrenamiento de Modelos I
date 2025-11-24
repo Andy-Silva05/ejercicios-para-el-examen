@@ -1,0 +1,209 @@
+1. Clase base abstracta: ModeloIA
+public abstract class ModeloIA {
+
+    protected String nombre;
+    protected ParametrosModelo parametros;  // composición
+    protected double precision;
+
+    public ModeloIA(String nombre) {
+        this.nombre = nombre;
+        this.parametros = new ParametrosModelo(); // COMPOSICIÓN → se crea aquí
+        this.precision = 0;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void modificarParametro(String clave, double valor) {
+        parametros.setParametro(clave, valor);
+    }
+
+    public abstract void entrenar(Dataset d);
+
+    public abstract double evaluar();
+
+    public void mostrarInfo() {
+        System.out.println("Modelo: " + nombre + " | Precisión: " + precision);
+        parametros.mostrar();
+    }
+}
+
+⚙️ 2. Composición: ParametrosModelo
+
+NO puede existir sin el modelo.
+
+import java.util.HashMap;
+
+class ParametrosModelo {
+
+    private HashMap<String, Double> parametros;
+
+    public ParametrosModelo() {
+        parametros = new HashMap<>();
+        parametros.put("learning_rate", 0.01);
+        parametros.put("epochs", 10.0);
+    }
+
+    public void setParametro(String clave, double valor) {
+        parametros.put(clave, valor);
+    }
+
+    public double getParametro(String clave) {
+        return parametros.get(clave);
+    }
+
+    public void mostrar() {
+        System.out.println("Parámetros: " + parametros);
+    }
+}
+
+🔢 3. Subclase: ModeloClasificacion
+public class ModeloClasificacion extends ModeloIA {
+
+    public ModeloClasificacion(String nombre) {
+        super(nombre);
+    }
+
+    @Override
+    public void entrenar(Dataset d) {
+        System.out.println("Entrenando modelo de clasificación con dataset: " + d.getNombre());
+        precision = Math.random() * 0.4 + 0.6; // precisión simulada 60%–100%
+    }
+
+    @Override
+    public double evaluar() {
+        System.out.println("Evaluando modelo de clasificación...");
+        return precision;
+    }
+}
+
+📈 4. Subclase: ModeloRegresion
+public class ModeloRegresion extends ModeloIA {
+
+    public ModeloRegresion(String nombre) {
+        super(nombre);
+    }
+
+    @Override
+    public void entrenar(Dataset d) {
+        System.out.println("Entrenando modelo de regresión con dataset: " + d.getNombre());
+        precision = Math.random() * 0.3 + 0.5; // precisión simulada 50%–80%
+    }
+
+    @Override
+    public double evaluar() {
+        System.out.println("Evaluando modelo de regresión...");
+        return precision;
+    }
+}
+
+🗂️ 5. Clase Dataset
+public class Dataset {
+    private String nombre;
+    private int tamaño;
+
+    public Dataset(String nombre, int tamaño) {
+        this.nombre = nombre;
+        this.tamaño = tamaño;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getTamaño() {
+        return tamaño;
+    }
+}
+
+🏛️ 6. Agregación: RepositorioDatasets
+import java.util.ArrayList;
+
+public class RepositorioDatasets {
+
+    private ArrayList<Dataset> datasets;
+
+    public RepositorioDatasets() {
+        datasets = new ArrayList<>();
+    }
+
+    public void agregarDataset(Dataset d) {
+        datasets.add(d);
+    }
+
+    public ArrayList<Dataset> getDatasets() {
+        return datasets;
+    }
+
+    public Dataset buscarDataset(String nombre) {
+        for (Dataset d : datasets) {
+            if (d.getNombre().equals(nombre)) return d;
+        }
+        return null;
+    }
+}
+
+👨‍🔧 7. Asociación: Entrenador
+
+Configura y entrena modelos.
+
+public class Entrenador {
+
+    private String nombre;
+
+    public Entrenador(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void configurarModelo(ModeloIA modelo, String parametro, double valor) {
+        System.out.println("Entrenador " + nombre + " modifica parámetro: " + parametro);
+        modelo.modificarParametro(parametro, valor);
+    }
+
+    public void entrenarModelo(ModeloIA modelo, Dataset d) {
+        modelo.entrenar(d);
+    }
+
+    public void evaluarModelo(ModeloIA modelo) {
+        double p = modelo.evaluar();
+        System.out.println("Precisión obtenida: " + p);
+    }
+}
+
+🧪 8. Clase Principal – Flujo completo
+public class Main {
+    public static void main(String[] args) {
+
+        RepositorioDatasets repo = new RepositorioDatasets();
+        Entrenador trainer = new Entrenador("Laura");
+
+        // Crear datasets
+        Dataset d1 = new Dataset("Imágenes", 5000);
+        Dataset d2 = new Dataset("Ventas", 10000);
+
+        // Agregar al repositorio
+        repo.agregarDataset(d1);
+        repo.agregarDataset(d2);
+
+        // Crear modelos
+        ModeloIA clasif = new ModeloClasificacion("Clasificador X");
+        ModeloIA regres = new ModeloRegresion("Regresor Y");
+
+        // Configurar modelos
+        trainer.configurarModelo(clasif, "learning_rate", 0.05);
+        trainer.configurarModelo(regres, "epochs", 50);
+
+        // Entrenar modelos
+        trainer.entrenarModelo(clasif, d1);
+        trainer.entrenarModelo(regres, d2);
+
+        // Evaluar modelos
+        trainer.evaluarModelo(clasif);
+        trainer.evaluarModelo(regres);
+
+        // Mostrar detalles
+        clasif.mostrarInfo();
+        regres.mostrarInfo();
+    }
+}
