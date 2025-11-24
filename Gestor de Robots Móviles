@@ -1,0 +1,106 @@
+Clase: ModuloEnergia:
+public class ModuloEnergia {
+    private String tipoBateria;
+    private int capacidad; // capacidad total en unidades de energía
+
+    public ModuloEnergia(String tipoBateria, int capacidad) {
+        this.tipoBateria = tipoBateria;
+        this.capacidad = capacidad;
+    }
+
+    public int getCapacidad() {
+        return capacidad;
+    }
+
+    public String getTipoBateria() {
+        return tipoBateria;
+    }
+
+    @Override
+    public String toString() {
+        return "Batería: " + tipoBateria + " | Capacidad: " + capacidad;
+    }
+}
+Clase: Robot:
+import java.util.ArrayList;
+
+public class Robot {
+    protected String id;
+    protected ArrayList<String> tareas;
+    protected ModuloEnergia modulo; // Composición
+
+    public Robot(String id, String tipoBateria, int capacidad) {
+        this.id = id;
+        this.tareas = new ArrayList<>();
+        this.modulo = new ModuloEnergia(tipoBateria, capacidad);
+    }
+
+    public void agregarTarea(String tarea) {
+        tareas.add(tarea);
+    }
+
+    public boolean puedeRealizarTarea(int costoEnergetico) {
+        return costoEnergetico <= modulo.getCapacidad();
+    }
+
+    public void listarTareas() {
+        System.out.println("Tareas del robot " + id + ":");
+        for (String t : tareas) {
+            System.out.println("- " + t);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Robot ID: " + id + "\n" + modulo.toString();
+    }
+}
+
+Subclase: RobotVigilancia:
+public class RobotVigilancia extends Robot {
+
+    public RobotVigilancia(String id, String tipoBateria, int capacidad) {
+        super(id, tipoBateria, capacidad);
+    }
+}
+Subclase: RobotMontacargas
+public class RobotMontacargas extends Robot {
+
+    public RobotMontacargas(String id, String tipoBateria, int capacidad) {
+        super(id, tipoBateria, capacidad);
+    }
+}
+main:
+public class Main {
+    public static void main(String[] args) {
+
+        // Crear robots
+        Robot vigilante = new RobotVigilancia("RV-01", "Litio", 100);
+        Robot montacargas = new RobotMontacargas("RM-88", "Plomo-Ácido", 200);
+
+        // Agregar tareas
+        vigilante.agregarTarea("Patrullar zona A");
+        vigilante.agregarTarea("Vigilancia nocturna");
+
+        montacargas.agregarTarea("Mover caja de 50kg");
+        montacargas.agregarTarea("Organizar estantería 3");
+
+        // Verificar tareas según energía
+        int costoTarea = 120;
+
+        System.out.println("¿RV-01 puede realizar tarea de costo " + costoTarea + "? "
+                + vigilante.puedeRealizarTarea(costoTarea));
+
+        costoTarea = 150;
+
+        System.out.println("¿RM-88 puede realizar tarea de costo " + costoTarea + "? "
+                + montacargas.puedeRealizarTarea(costoTarea));
+
+        // Listar tareas
+        System.out.println();
+        vigilante.listarTareas();
+
+        System.out.println();
+        montacargas.listarTareas();
+    }
+}
