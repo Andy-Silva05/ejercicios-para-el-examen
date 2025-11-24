@@ -1,0 +1,246 @@
+1. Clase base: Dispositivo
+public abstract class Dispositivo {
+    protected String id;
+    protected boolean estado; // activo/inactivo
+
+    public Dispositivo(String id) {
+        this.id = id;
+        this.estado = true;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public boolean isActivo() {
+        return estado;
+    }
+
+    public void setEstado(boolean estado) {
+        this.estado = estado;
+    }
+
+    public abstract void mostrarInfo();
+}
+
+🧩 2. Clase interna por Composición: Calibracion
+
+✓ Solo existe dentro del sensor
+✓ No puede existir sin él
+
+public class Calibracion {
+    private double offset;
+    private String fecha;
+
+    public Calibracion(double offset, String fecha) {
+        this.offset = offset;
+        this.fecha = fecha;
+    }
+
+    public double getOffset() {
+        return offset;
+    }
+
+    public String getFecha() {
+        return fecha;
+    }
+}
+
+🧩 3. Subclases: Sensores y Actuador
+✔ SensorTemperatura (composición)
+public class SensorTemperatura extends Dispositivo {
+
+    private double temperatura;
+    private Calibracion calibracion; // composición
+
+    public SensorTemperatura(String id, double temperaturaInicial) {
+        super(id);
+        this.temperatura = temperaturaInicial;
+        this.calibracion = new Calibracion(0.0, "2025-01-01");
+    }
+
+    public void setTemperatura(double t) {
+        this.temperatura = t + calibracion.getOffset();
+    }
+
+    public double getTemperatura() {
+        return temperatura;
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("SensorTemperatura " + id + " -> Temp: " + temperatura);
+    }
+}
+
+✔ SensorPresion (composición)
+public class SensorPresion extends Dispositivo {
+
+    private double presion;
+    private Calibracion calibracion;
+
+    public SensorPresion(String id, double presionInicial) {
+        super(id);
+        this.presion = presionInicial;
+        this.calibracion = new Calibracion(0.0, "2025-01-01");
+    }
+
+    public void setPresion(double p) {
+        this.presion = p + calibracion.getOffset();
+    }
+
+    public double getPresion() {
+        return presion;
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("SensorPresion " + id + " -> Presión: " + presion);
+    }
+}
+
+✔ ActuadorValvula
+public class ActuadorValvula extends Dispositivo {
+
+    private boolean abierta;
+
+    public ActuadorValvula(String id) {
+        super(id);
+        this.abierta = false;
+    }
+
+    public void abrir() {
+        abierta = true;
+        System.out.println("Válvula " + id + " abierta.");
+    }
+
+    public void cerrar() {
+        abierta = false;
+        System.out.println("Válvula " + id + " cerrada.");
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("ActuadorValvula " + id + " -> Estado: " + (abierta ? "Abierta" : "Cerrada"));
+    }
+}
+
+🏭 4. PlantaIndustrial (Agregación)
+
+Contiene muchos dispositivos, pero estos pueden existir sin la planta.
+
+import java.util.ArrayList;
+
+public class PlantaIndustrial {
+
+    private ArrayList<Dispositivo> dispositivos;
+
+    public PlantaIndustrial() {
+        dispositivos = new ArrayList<>();
+    }
+
+    public void agregarDispositivo(Dispositivo d) {
+        dispositivos.add(d);
+    }
+
+    public ArrayList<Dispositivo> getDispositivos() {
+        return dispositivos;
+    }
+
+    // calcular promedio de sensores de temperatura
+    public double promedioTemperatura() {
+        double suma = 0;
+        int count = 0;
+
+        for (Dispositivo d : dispositivos) {
+            if (d instanceof SensorTemperatura st) {
+                suma += st.getTemperatura();
+                count++;
+            }
+        }
+        return count == 0 ? 0 : suma / count;
+    }
+
+    public double promedioPresion() {
+        double suma = 0;
+        int count = 0;
+
+        for (Dispositivo d : dispositivos) {
+            if (d instanceof SensorPresion sp) {
+                suma += sp.getPresion();
+                count++;
+            }
+        }
+        return count == 0 ? 0 : suma / count;
+    }
+}
+
+🧑‍🔧 5. Operador (Asociación)
+
+No es dueño de los dispositivos, solo los supervisa.
+
+public class Operador {
+    private String nombre;
+
+    public Operador(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void revisarDispositivo(Dispositivo d) {
+        System.out.println("Operador " + nombre + " revisa:");
+        d.mostrarInfo();
+    }
+
+    public void activarSiAnomalia(SensorTemperatura st, ActuadorValvula v) {
+        if (st.getTemperatura() > 80) {
+            System.out.println("ALERTA: Temperatura crítica!");
+            v.abrir();
+        }
+    }
+
+    public void activarSiPresionAlta(SensorPresion sp, ActuadorValvula v) {
+        if (sp.getPresion() > 120) {
+            System.out.println("ALERTA: Presión fuera de rango!");
+            v.cerrar();
+        }
+    }
+}
+
+🎯 6. Clase Principal (flujo completo solicitado)
+public class Main {
+    public static void main(String[] args) {
+
+        PlantaIndustrial planta = new PlantaIndustrial();
+
+        // Crear dispositivos
+        SensorTemperatura st1 = new SensorTemperatura("ST-01", 50);
+        SensorTemperatura st2 = new SensorTemperatura("ST-02", 90);
+        SensorPresion sp1 = new SensorPresion("SP-01", 100);
+        ActuadorValvula valvula = new ActuadorValvula("VAL-01");
+
+        // Agregar a la planta (agregación)
+        planta.agregarDispositivo(st1);
+        planta.agregarDispositivo(st2);
+        planta.agregarDispositivo(sp1);
+        planta.agregarDispositivo(valvula);
+
+        Operador operador = new Operador("Laura");
+
+        // Registrar cambios de estado
+        st1.setTemperatura(55);
+        sp1.setPresion(130);
+
+        // Mostrar info
+        for (Dispositivo d : planta.getDispositivos()) {
+            operador.revisarDispositivo(d);
+        }
+
+        // Calcular promedios
+        System.out.println("Promedio de temperatura: " + planta.promedioTemperatura());
+        System.out.println("Promedio de presión: " + planta.promedioPresion());
+
+        // Activar actuadores si hay anomalías
+        operador.activarSiAnomalia(st2, valvula);
+        operador.activarSiPresionAlta(sp1, valvula);
+    }
+}
