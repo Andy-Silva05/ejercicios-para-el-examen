@@ -1,0 +1,210 @@
+clase base regla:
+public abstract class Regla {
+    protected int prioridad;
+    protected CondicionInterna condicion;
+
+    public Regla(int prioridad, String descripcionCondicion) {
+        this.prioridad = prioridad;
+        this.condicion = new CondicionInterna(descripcionCondicion); // COMPOSICIÓN
+    }
+
+    public int getPrioridad() {
+        return prioridad;
+    }
+
+    public abstract boolean evaluar(Trafico t); // Evalúa si la regla aplica
+    public abstract String getTipo();
+
+    public void mostrarRegla() {
+        System.out.println("Tipo: " + getTipo());
+        System.out.println("Prioridad: " + prioridad);
+        condicion.mostrar();
+    }
+}
+Clase de Composición: CondicionInterna.java
+public class CondicionInterna {
+    private String descripcion;
+
+    public CondicionInterna(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public void mostrar() {
+        System.out.println("Condición: " + descripcion);
+    }
+}
+Subclase: ReglaIP.java
+public class ReglaIP extends Regla {
+
+    private String ipBloqueada;
+
+    public ReglaIP(int prioridad, String descripcionCondicion, String ipBloqueada) {
+        super(prioridad, descripcionCondicion);
+        this.ipBloqueada = ipBloqueada;
+    }
+
+    @Override
+    public boolean evaluar(Trafico t) {
+        return t.getIpOrigen().equals(ipBloqueada);
+    }
+
+    @Override
+    public String getTipo() {
+        return "Regla por IP";
+    }
+}
+
+Subclase: ReglaPuerto.java
+public class ReglaPuerto extends Regla {
+
+    private int puertoBloqueado;
+
+    public ReglaPuerto(int prioridad, String descripcionCondicion, int puertoBloqueado) {
+        super(prioridad, descripcionCondicion);
+        this.puertoBloqueado = puertoBloqueado;
+    }
+
+    @Override
+    public boolean evaluar(Trafico t) {
+        return t.getPuerto() == puertoBloqueado;
+    }
+
+    @Override
+    public String getTipo() {
+        return "Regla por Puerto";
+    }
+}
+Subclase: ReglaProtocolo.java
+public class ReglaProtocolo extends Regla {
+
+    private String protocolo;
+
+    public ReglaProtocolo(int prioridad, String descripcionCondicion, String protocolo) {
+        super(prioridad, descripcionCondicion);
+        this.protocolo = protocolo;
+    }
+
+    @Override
+    public boolean evaluar(Trafico t) {
+        return t.getProtocolo().equalsIgnoreCase(protocolo);
+    }
+
+    @Override
+    public String getTipo() {
+        return "Regla por Protocolo";
+    }
+}
+Clase Trafico.java (para evaluación de reglas)
+public class Trafico {
+    private String ipOrigen;
+    private int puerto;
+    private String protocolo;
+
+    public Trafico(String ipOrigen, int puerto, String protocolo) {
+        this.ipOrigen = ipOrigen;
+        this.puerto = puerto;
+        this.protocolo = protocolo;
+    }
+
+    public String getIpOrigen() { return ipOrigen; }
+    public int getPuerto() { return puerto; }
+    public String getProtocolo() { return protocolo; }
+}
+Firewall.java (Agregación)
+import java.util.ArrayList;
+
+public class Firewall {
+
+    private String nombre;
+    private ArrayList<Regla> reglas;
+
+    public Firewall(String nombre) {
+        this.nombre = nombre;
+        this.reglas = new ArrayList<>();
+    }
+
+    public void agregarRegla(Regla r) {
+        reglas.add(r);
+    }
+
+    public void mostrarReglas() {
+        reglas.sort((a, b) -> a.getPrioridad() - b.getPrioridad());
+        for (Regla r : reglas) {
+            r.mostrarRegla();
+            System.out.println("---------------------");
+        }
+    }
+
+    // Evaluar tráfico según prioridad
+    public void evaluarTrafico(Trafico t) {
+        reglas.sort((a, b) -> a.getPrioridad() - b.getPrioridad());
+
+        for (Regla r : reglas) {
+            if (r.evaluar(t)) {
+                System.out.println("TRÁFICO BLOQUEADO por: " + r.getTipo());
+                return;
+            }
+        }
+
+        System.out.println("Tráfico permitido.");
+    }
+
+    // Detectar si dos reglas se solapan (conflictos)
+    public void detectarConflictos() {
+        System.out.println("=== Análisis de conflictos ===");
+        for (int i = 0; i < reglas.size(); i++) {
+            for (int j = i + 1; j < reglas.size(); j++) {
+                if (reglas.get(i).getTipo().equals(reglas.get(j).getTipo())) {
+                    System.out.println("Posible conflicto entre reglas: "
+                            + reglas.get(i).getTipo() + " de prioridades "
+                            + reglas.get(i).getPrioridad() + " y "
+                            + reglas.get(j).getPrioridad());
+                }
+            }
+        }
+    }
+}
+Administrador.java (Asociación)
+public class Administrador {
+
+    private String nombre;
+
+    public Administrador(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void editarRegla(Regla r, int nuevaPrioridad) {
+        System.out.println(nombre + " está editando la regla.");
+        System.out.println("Nueva prioridad: " + nuevaPrioridad);
+        r.prioridad = nuevaPrioridad;
+    }
+}
+main:
+public class Main {
+    public static void main(String[] args) {
+
+        Firewall fw = new Firewall("Firewall Central");
+        Administrador admin = new Administrador("Luis");
+
+        Regla r1 = new ReglaIP(1, "Bloquear IP peligrosa", "192.168.1.50");
+        Regla r2 = new ReglaPuerto(3, "Bloqueo de puertos críticos", 22);
+        Regla r3 = new ReglaProtocolo(2, "Bloquear protocolo inseguro", "FTP");
+
+        fw.agregarRegla(r1);
+        fw.agregarRegla(r2);
+        fw.agregarRegla(r3);
+
+        fw.mostrarReglas();
+
+        // Evaluación de tráfico
+        Trafico t = new Trafico("192.168.1.50", 80, "TCP");
+        fw.evaluarTrafico(t);
+
+        // Detección de conflictos
+        fw.detectarConflictos();
+
+        // Edición de regla
+        admin.editarRegla(r2, 0);
+        fw.mostrarReglas();
+    }
+}
