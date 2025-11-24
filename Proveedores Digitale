@@ -1,0 +1,146 @@
+Clase abstracta Proveedor:
+public abstract class Proveedor {
+    protected String nombre;
+    protected String pais;
+    protected ArrayList<Contrato> contratos; // Composición
+
+    public Proveedor(String nombre, String pais) {
+        this.nombre = nombre;
+        this.pais = pais;
+        this.contratos = new ArrayList<>();
+    }
+
+    // Crear contrato (Composición: el contrato depende del proveedor)
+    public void crearContrato(double precio, int duracionMeses) {
+        Contrato c = new Contrato(precio, duracionMeses);
+        contratos.add(c);
+    }
+
+    public ArrayList<Contrato> getContratos() {
+        return contratos;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getPais() {
+        return pais;
+    }
+
+    @Override
+    public String toString() {
+        return nombre + " - " + pais;
+    }
+}
+Subclases de Proveedor
+ProveedorCloud
+public class ProveedorCloud extends Proveedor {
+    public ProveedorCloud(String nombre, String pais) {
+        super(nombre, pais);
+    }
+}
+
+ProveedorSaaS
+public class ProveedorSaaS extends Proveedor {
+    public ProveedorSaaS(String nombre, String pais) {
+        super(nombre, pais);
+    }
+}
+
+ProveedorPasarelasPago
+public class ProveedorPasarelasPago extends Proveedor {
+    public ProveedorPasarelasPago(String nombre, String pais) {
+        super(nombre, pais);
+    }
+}
+clase contrato:
+public class Contrato {
+    private double precio;
+    private int duracionMeses;
+
+    public Contrato(double precio, int duracionMeses) {
+        this.precio = precio;
+        this.duracionMeses = duracionMeses;
+    }
+
+    @Override
+    public String toString() {
+        return "Precio: $" + precio + " / Duración: " + duracionMeses + " meses";
+    }
+}
+clase ClienteEmpresa:
+import java.util.ArrayList;
+
+public class ClienteEmpresa {
+    private String nombre;
+    private ArrayList<Proveedor> proveedoresContratados;
+
+    public ClienteEmpresa(String nombre) {
+        this.nombre = nombre;
+        this.proveedoresContratados = new ArrayList<>();
+    }
+
+    public void contratarProveedor(Proveedor p) {
+        proveedoresContratados.add(p);
+    }
+
+    public ArrayList<Proveedor> getProveedoresContratados() {
+        return proveedoresContratados;
+    }
+
+    // Verificar si tiene proveedores de un tipo
+    public boolean tieneProveedorTipo(Class<?> tipo) {
+        for (Proveedor p : proveedoresContratados) {
+            if (tipo.isInstance(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void listarContratosActivos() {
+        System.out.println("Contratos activos del cliente " + nombre + ":");
+
+        for (Proveedor p : proveedoresContratados) {
+            System.out.println("- Proveedor: " + p.getNombre());
+            for (Contrato c : p.getContratos()) {
+                System.out.println("    * " + c);
+            }
+        }
+    }
+}
+main:
+public class Main {
+    public static void main(String[] args) {
+
+        // Crear proveedores
+        ProveedorCloud aws = new ProveedorCloud("AWS", "USA");
+        ProveedorSaaS salesforce = new ProveedorSaaS("Salesforce", "USA");
+        ProveedorPasarelasPago stripe = new ProveedorPasarelasPago("Stripe", "Irlanda");
+
+        // Crear cliente
+        ClienteEmpresa empresa1 = new ClienteEmpresa("TechCorp");
+
+        // Asociar proveedores al cliente
+        empresa1.contratarProveedor(aws);
+        empresa1.contratarProveedor(salesforce);
+        empresa1.contratarProveedor(stripe);
+
+        // Crear contratos internos
+        aws.crearContrato(5000, 12);
+        salesforce.crearContrato(3000, 6);
+        stripe.crearContrato(1500, 24);
+
+        // Verificar si un cliente tiene un tipo específico
+        boolean tieneCloud = empresa1.tieneProveedorTipo(ProveedorCloud.class);
+        System.out.println("¿El cliente tiene proveedores Cloud? " + tieneCloud);
+
+        boolean tieneSaaS = empresa1.tieneProveedorTipo(ProveedorSaaS.class);
+        System.out.println("¿El cliente tiene proveedores SaaS? " + tieneSaaS);
+
+        // Listar contratos activos
+        System.out.println();
+        empresa1.listarContratosActivos();
+    }
+}
