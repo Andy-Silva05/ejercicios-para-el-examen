@@ -1,0 +1,196 @@
+1. Clase abstracta EventoSeguridad
+public abstract class EventoSeguridad {
+    protected String descripcion;
+    protected int criticidad; // 1–10
+
+    public EventoSeguridad(String descripcion, int criticidad) {
+        this.descripcion = descripcion;
+        this.criticidad = criticidad;
+    }
+
+    public int getCriticidad() {
+        return criticidad;
+    }
+
+    public abstract void mostrarDetalles();
+
+    public abstract String tipoEvento();
+}
+
+✅ 2. Subclases de EventoSeguridad
+EventoRed (con Composición → PaqueteInspeccionado)
+public class EventoRed extends EventoSeguridad {
+
+    private PaqueteInspeccionado paquete; // COMPOSICIÓN
+
+    public EventoRed(String descripcion, int criticidad, String origen, String destino, int tamano) {
+        super(descripcion, criticidad);
+        this.paquete = new PaqueteInspeccionado(origen, destino, tamano); // Solo existe aquí
+    }
+
+    @Override
+    public void mostrarDetalles() {
+        System.out.println("[Evento de Red] " + descripcion + " | Criticidad: " + criticidad);
+        paquete.mostrar();
+    }
+
+    @Override
+    public String tipoEvento() {
+        return "RED";
+    }
+
+    // Clase interna → COMPOSICIÓN REAL
+    private class PaqueteInspeccionado {
+        private String ipOrigen;
+        private String ipDestino;
+        private int tamanoBytes;
+
+        public PaqueteInspeccionado(String ipOrigen, String ipDestino, int tamanoBytes) {
+            this.ipOrigen = ipOrigen;
+            this.ipDestino = ipDestino;
+            this.tamanoBytes = tamanoBytes;
+        }
+
+        public void mostrar() {
+            System.out.println("   Paquete → Origen: " + ipOrigen +
+                               ", Destino: " + ipDestino +
+                               ", Tamaño: " + tamanoBytes + " bytes");
+        }
+    }
+}
+
+EventoAcceso
+public class EventoAcceso extends EventoSeguridad {
+
+    private String usuario;
+    private boolean accesoExitoso;
+
+    public EventoAcceso(String descripcion, int criticidad, String usuario, boolean accesoExitoso) {
+        super(descripcion, criticidad);
+        this.usuario = usuario;
+        this.accesoExitoso = accesoExitoso;
+    }
+
+    @Override
+    public void mostrarDetalles() {
+        System.out.println("[Evento de Acceso] " + descripcion +
+                           " | Usuario: " + usuario +
+                           " | Exitoso: " + accesoExitoso +
+                           " | Criticidad: " + criticidad);
+    }
+
+    @Override
+    public String tipoEvento() {
+        return "ACCESO";
+    }
+}
+
+EventoMalware
+public class EventoMalware extends EventoSeguridad {
+
+    private String tipoMalware;
+
+    public EventoMalware(String descripcion, int criticidad, String tipoMalware) {
+        super(descripcion, criticidad);
+        this.tipoMalware = tipoMalware;
+    }
+
+    @Override
+    public void mostrarDetalles() {
+        System.out.println("[Evento de Malware] " + descripcion +
+                           " | Tipo: " + tipoMalware +
+                           " | Criticidad: " + criticidad);
+    }
+
+    @Override
+    public String tipoEvento() {
+        return "MALWARE";
+    }
+}
+
+✅ 3. Clase Sensor (Agregación)
+
+Un sensor tiene eventos, pero los eventos viven aparte.
+
+import java.util.ArrayList;
+
+public class Sensor {
+    private String nombre;
+    private ArrayList<EventoSeguridad> eventos;
+
+    public Sensor(String nombre) {
+        this.nombre = nombre;
+        this.eventos = new ArrayList<>();
+    }
+
+    public void registrarEvento(EventoSeguridad e) {
+        eventos.add(e);
+    }
+
+    public ArrayList<EventoSeguridad> getEventos() {
+        return eventos;
+    }
+
+    public void mostrarEventos() {
+        System.out.println("Eventos del sensor " + nombre + ":");
+        for (EventoSeguridad e : eventos) {
+            e.mostrarDetalles();
+        }
+    }
+
+    public void filtrarPorCriticidad(int nivel) {
+        System.out.println("Eventos con criticidad >= " + nivel + ":");
+        for (EventoSeguridad e : eventos) {
+            if (e.getCriticidad() >= nivel) {
+                e.mostrarDetalles();
+            }
+        }
+    }
+}
+
+✅ 4. Clase AnalistaSeguridad (Asociación)
+
+El analista revisa eventos, pero no los posee.
+
+public class AnalistaSeguridad {
+    private String nombre;
+
+    public AnalistaSeguridad(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void revisarEvento(EventoSeguridad e, String accionSugerida) {
+        System.out.println("\nAnalista " + nombre + " revisó evento:");
+        e.mostrarDetalles();
+        System.out.println(" → Acción sugerida: " + accionSugerida);
+    }
+}
+
+✅ 5. Clase Principal – Flujo Completo
+public class Main {
+    public static void main(String[] args) {
+
+        Sensor sensor = new Sensor("SensorPrincipal");
+        AnalistaSeguridad analista = new AnalistaSeguridad("Laura Castro");
+
+        // Registrar eventos
+        EventoSeguridad e1 = new EventoRed("Tráfico inusual detectado", 8,
+                                           "192.168.1.10", "8.8.8.8", 1200);
+        EventoSeguridad e2 = new EventoAcceso("Intento de login fallido", 6, "admin", false);
+        EventoSeguridad e3 = new EventoMalware("Archivo sospechoso detectado", 9, "Troyano");
+
+        sensor.registrarEvento(e1);
+        sensor.registrarEvento(e2);
+        sensor.registrarEvento(e3);
+
+        // Mostrar todos
+        sensor.mostrarEventos();
+
+        System.out.println("\n--- Filtro por criticidad ---");
+        sensor.filtrarPorCriticidad(7);
+
+        // Analista revisa eventos
+        analista.revisarEvento(e3, "Aislar archivo y ejecutar análisis antivirus.");
+        analista.revisarEvento(e2, "Bloquear usuario y notificar al administrador.");
+    }
+}
