@@ -1,0 +1,53 @@
+clase unidad:
+public class Unidad {
+  private string titulo;
+  Unidad (string titulo){
+    this.titulo=titulo;
+  }
+  public void mostrarUnidad(){
+    System.out.println(" - Unidad: " + titulo);
+  }
+}
+clase curso:
+import java.util.ArrayList;
+
+public class Curso {
+
+    private String nombreCurso;
+    private ArrayList<Unidad> unidades; // COMPOSICIÓN
+
+    public Curso(String nombreCurso) {
+        this.nombreCurso = nombreCurso;
+        this.unidades = new ArrayList<>();
+
+        // COMPOSICIÓN: se crean dentro del curso
+        unidades.add(new Unidad("Introducción"));
+        unidades.add(new Unidad("Conceptos Fundamentales"));
+        unidades.add(new Unidad("Ejercicios Prácticos"));
+        unidades.add(new Unidad("Evaluación Final"));
+    }
+
+    public void mostrarCurso() {
+        System.out.println("Curso: " + nombreCurso);
+        System.out.println("Unidades:");
+
+        for (Unidad u : unidades) {
+            u.mostrarUnidad();
+        }
+    }
+}
+main:
+public class Main {
+    public static void main(String[] args) {
+
+        // Crear el curso (las unidades se crean dentro del curso → COMPOSICIÓN)
+        Curso curso = new Curso("Programación en Java");
+
+        // Mostrar información completa
+        curso.mostrarCurso();
+    }
+}
+
+
+
+
