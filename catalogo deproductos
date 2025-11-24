@@ -1,0 +1,66 @@
+clase producto:
+public class Producto {
+    private String nombre;
+    private double precio;
+
+    public Producto(String nombre, double precio) {
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public double getPrecio() {
+        return precio;
+    }
+
+    public void mostrarProducto() {
+        System.out.println("Producto: " + nombre + " | Precio: $" + precio);
+    }
+}
+clase catalogo:
+import java.util.ArrayList;
+
+public class Catalogo {
+    private String nombreCatalogo;
+    private ArrayList<Producto> productos; // AGREGACIÓN
+
+    public Catalogo(String nombreCatalogo) {
+        this.nombreCatalogo = nombreCatalogo;
+        this.productos = new ArrayList<>();
+    }
+
+    public void agregarProducto(Producto p) {
+        productos.add(p);
+    }
+
+    public void listarProductos() {
+        System.out.println("=== Catálogo: " + nombreCatalogo + " ===");
+        for (Producto p : productos) {
+            p.mostrarProducto();
+        }
+    }
+}
+main:
+public class Main {
+    public static void main(String[] args) {
+
+        // Los productos pueden existir sin el catálogo → AGREGACIÓN
+        Producto p1 = new Producto("Laptop Lenovo", 750.99);
+        Producto p2 = new Producto("Mouse Gamer", 25.50);
+        Producto p3 = new Producto("Monitor LG 24\"", 180.00);
+
+        // Se crea el catálogo
+        Catalogo catalogo = new Catalogo("Tecnología");
+
+        // Se agregan los productos al catálogo
+        catalogo.agregarProducto(p1);
+        catalogo.agregarProducto(p2);
+        catalogo.agregarProducto(p3);
+
+        // Mostrar lista
+        catalogo.listarProductos();
+    }
+}
