@@ -1,0 +1,146 @@
+1. Clase base → Producto (herencia)
+abstract class Producto {
+    protected String nombre;
+    protected double precio;
+
+    public Producto(String nombre, double precio) {
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+    public abstract double calcularImpuesto();
+
+    public double precioFinal() {
+        return precio + calcularImpuesto();
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public abstract void mostrarInfo();
+}
+
+2. Subclase → ProductoDigital
+class ProductoDigital extends Producto {
+
+    public ProductoDigital(String nombre, double precio) {
+        super(nombre, precio);
+    }
+
+    @Override
+    public double calcularImpuesto() {
+        return precio * 0.05; // 5% impuesto para productos digitales
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("[DIGITAL] " + nombre +
+                " | Precio: $" + precio +
+                " | Impuesto: $" + calcularImpuesto());
+    }
+}
+
+3. Subclase → ProductoFisico (con composición interna DetallesEnvio)
+class ProductoFisico extends Producto {
+
+    // --- COMPOSICIÓN ---
+    class DetallesEnvio {
+        double peso;
+        String direccion;
+
+        DetallesEnvio(double peso, String direccion) {
+            this.peso = peso;
+            this.direccion = direccion;
+        }
+    }
+
+    private DetallesEnvio detallesEnvio;
+
+    public ProductoFisico(String nombre, double precio, double peso, String direccionEnvio) {
+        super(nombre, precio);
+        this.detallesEnvio = new DetallesEnvio(peso, direccionEnvio); 
+        // La composición se crea dentro del constructor
+    }
+
+    @Override
+    public double calcularImpuesto() {
+        return precio * 0.12; // 12% para físicos
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("[FISICO] " + nombre +
+                " | Precio: $" + precio +
+                " | Impuesto: $" + calcularImpuesto() +
+                " | Peso: " + detallesEnvio.peso + "kg");
+    }
+}
+
+4. Agregación → Marketplace contiene productos
+import java.util.ArrayList;
+
+class Marketplace {
+    private ArrayList<Producto> productos = new ArrayList<>();
+
+    public void registrarProducto(Producto p) {
+        productos.add(p);
+        System.out.println("Producto registrado: " + p.getNombre());
+    }
+
+    public void listarProductos() {
+        System.out.println("\n--- LISTA DE PRODUCTOS ---");
+        for (Producto p : productos) {
+            p.mostrarInfo();
+        }
+    }
+
+    public Producto buscarProducto(String nombre) {
+        return productos.stream()
+                .filter(p -> p.getNombre().equalsIgnoreCase(nombre))
+                .findFirst()
+                .orElse(null);
+    }
+}
+
+5. Asociación → Cliente realiza compras
+class Cliente {
+    private String nombre;
+
+    public Cliente(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void comprar(Producto p) {
+        if (p == null) {
+            System.out.println("Producto no encontrado.");
+            return;
+        }
+        System.out.println(nombre + " compró " + p.getNombre() +
+                " por $" + p.precioFinal());
+    }
+}
+
+6. Clase principal → Flujo completo
+public class Main {
+    public static void main(String[] args) {
+
+        Marketplace market = new Marketplace();
+
+        // Registrar productos
+        Producto p1 = new ProductoDigital("Curso Java", 50);
+        Producto p2 = new ProductoFisico("Teclado Mecánico", 80, 1.2, "Av. Central 123");
+
+        market.registrarProducto(p1);
+        market.registrarProducto(p2);
+
+        market.listarProductos();
+
+        Cliente cliente = new Cliente("Andy");
+
+        // Simulación de compra
+        System.out.println();
+        cliente.comprar(market.buscarProducto("Curso Java"));
+        cliente.comprar(market.buscarProducto("Teclado Mecánico"));
+    }
+}
