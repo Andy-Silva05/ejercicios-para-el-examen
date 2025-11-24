@@ -1,0 +1,150 @@
+1. Clase base (herencia) → Contenido
+abstract class Contenido {
+    protected String titulo;
+    protected String categoria;
+    protected Metadata metadata; // Composición
+
+    // --- Composición ---
+    // Metadata NO puede existir fuera del contenido
+    protected class Metadata {
+        int duracion;
+        String creador;
+
+        Metadata(int duracion, String creador) {
+            this.duracion = duracion;
+            this.creador = creador;
+        }
+    }
+
+    public Contenido(String titulo, String categoria, int duracion, String creador) {
+        this.titulo = titulo;
+        this.categoria = categoria;
+        this.metadata = new Metadata(duracion, creador);
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    abstract void mostrarInfo();
+}
+
+2. Subclase → ContenidoVideo
+class ContenidoVideo extends Contenido {
+
+    public ContenidoVideo(String titulo, String categoria, int duracion, String creador) {
+        super(titulo, categoria, duracion, creador);
+    }
+
+    @Override
+    void mostrarInfo() {
+        System.out.println("[VIDEO] " + titulo +
+                " | Categoria: " + categoria +
+                " | Duración: " + metadata.duracion + " min");
+    }
+}
+
+3. Subclase → ContenidoArticulo
+class ContenidoArticulo extends Contenido {
+
+    public ContenidoArticulo(String titulo, String categoria, int duracion, String creador) {
+        super(titulo, categoria, duracion, creador);
+    }
+
+    @Override
+    void mostrarInfo() {
+        System.out.println("[ARTICULO] " + titulo +
+                " | Categoria: " + categoria +
+                " | Autor: " + metadata.creador);
+    }
+}
+
+4. Asociación → Usuario consume contenido
+import java.util.ArrayList;
+import java.util.List;
+
+class Usuario {
+    private String nombre;
+    private ArrayList<Contenido> historial = new ArrayList<>();
+
+    public Usuario(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void consumir(Contenido c) {
+        historial.add(c);
+        System.out.println(nombre + " consumió: " + c.titulo);
+    }
+
+    public List<Contenido> getHistorial() {
+        return historial;
+    }
+}
+
+5. Agregación → SistemaRecomendador contiene lista de Contenido
+import java.util.ArrayList;
+
+class SistemaRecomendador {
+    private ArrayList<Contenido> contenidos = new ArrayList<>();
+
+    public void agregarContenido(Contenido c) {
+        contenidos.add(c);
+    }
+
+    // Recomendación por categoría
+    public void recomendar(Usuario u) {
+        if (u.getHistorial().isEmpty()) {
+            System.out.println("Sin historial, recomendaciones generales:");
+            contenidos.forEach(Contenido::mostrarInfo);
+            return;
+        }
+
+        String categoriaPreferida = u.getHistorial()
+                .stream()
+                .map(Contenido::getCategoria)
+                .findFirst()
+                .orElse("General");
+
+        System.out.println("Recomendaciones basadas en: " + categoriaPreferida);
+        contenidos.stream()
+                .filter(c -> c.getCategoria().equals(categoriaPreferida))
+                .forEach(Contenido::mostrarInfo);
+    }
+
+    // Medición básica de relevancia
+    public int medirRelevancia(Contenido c, Usuario u) {
+        long veces = u.getHistorial().stream()
+                .filter(x -> x.getCategoria().equals(c.getCategoria()))
+                .count();
+
+        return (int) veces * 10;
+    }
+}
+
+6. Clase principal Main (flujo)
+public class Main {
+    public static void main(String[] args) {
+
+        SistemaRecomendador s = new SistemaRecomendador();
+
+        // Contenidos
+        Contenido v1 = new ContenidoVideo("Java Tutorial", "Programación", 30, "Carlos");
+        Contenido v2 = new ContenidoVideo("Patrones de Diseño", "Programación", 45, "Ana");
+        Contenido a1 = new ContenidoArticulo("Historia de la IA", "Tecnología", 10, "Luis");
+
+        s.agregarContenido(v1);
+        s.agregarContenido(v2);
+        s.agregarContenido(a1);
+
+        Usuario u = new Usuario("Andy");
+
+        u.consumir(v1);
+        u.consumir(v2);
+
+        System.out.println();
+        s.recomendar(u);
+
+        System.out.println("\nRelevancia:");
+        System.out.println("Video 1: " + s.medirRelevancia(v1, u));
+    }
+}
