@@ -1,0 +1,158 @@
+1. Clase base: Vulnerabilidad
+public abstract class Vulnerabilidad {
+    protected String nombre;
+    protected int nivelRiesgo; // 1 a 10
+
+    // Composición: VectorAtaque solo existe dentro de Vulnerabilidad
+    protected VectorAtaque vectorAtaque;
+
+    public Vulnerabilidad(String nombre, int nivelRiesgo, String metodoAtaque) {
+        this.nombre = nombre;
+        this.nivelRiesgo = nivelRiesgo;
+        this.vectorAtaque = new VectorAtaque(metodoAtaque); // creado ADENTRO
+    }
+
+    public int getNivelRiesgo() {
+        return nivelRiesgo;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void mostrarDetalles() {
+        System.out.println("Vulnerabilidad: " + nombre);
+        System.out.println("Nivel riesgo: " + nivelRiesgo);
+        System.out.println("Vector de ataque: " + vectorAtaque.getMetodo());
+    }
+}
+
+🧩 2. Clase interna (Composición): VectorAtaque
+public class VectorAtaque {
+    private String metodo;
+
+    public VectorAtaque(String metodo) {
+        this.metodo = metodo;
+    }
+
+    public String getMetodo() {
+        return metodo;
+    }
+}
+
+🧩 3. Subclases de Vulnerabilidad
+✔ Vulnerabilidad Software
+public class VulnerabilidadSoftware extends Vulnerabilidad {
+
+    public VulnerabilidadSoftware(String nombre, int nivelRiesgo, String metodoAtaque) {
+        super(nombre, nivelRiesgo, metodoAtaque);
+    }
+}
+
+✔ Vulnerabilidad Hardware
+public class VulnerabilidadHardware extends Vulnerabilidad {
+
+    public VulnerabilidadHardware(String nombre, int nivelRiesgo, String metodoAtaque) {
+        super(nombre, nivelRiesgo, metodoAtaque);
+    }
+}
+
+🧩 4. Clase Equipo (Agregación)
+
+El equipo tiene vulnerabilidades pero estas pueden existir sin él.
+
+import java.util.ArrayList;
+
+public class Equipo {
+    private String nombre;
+    private ArrayList<Vulnerabilidad> vulnerabilidades;
+
+    public Equipo(String nombre) {
+        this.nombre = nombre;
+        this.vulnerabilidades = new ArrayList<>();
+    }
+
+    public void agregarVulnerabilidad(Vulnerabilidad v) {
+        vulnerabilidades.add(v);
+    }
+
+    public ArrayList<Vulnerabilidad> getVulnerabilidades() {
+        return vulnerabilidades;
+    }
+
+    public void mostrarVulnerabilidades() {
+        System.out.println("=== Vulnerabilidades del equipo " + nombre + " ===");
+        for (Vulnerabilidad v : vulnerabilidades) {
+            v.mostrarDetalles();
+            System.out.println("-------------------");
+        }
+    }
+
+    public int calcularRiesgoAcumulado() {
+        int total = 0;
+        for (Vulnerabilidad v : vulnerabilidades) {
+            total += v.getNivelRiesgo();
+        }
+        return total;
+    }
+}
+
+🧩 5. Clase Auditor (Asociación)
+
+El auditor solo analiza, no es dueño de los equipos ni vulnerabilidades.
+
+public class Auditor {
+    private String nombre;
+
+    public Auditor(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void evaluarEquipo(Equipo e) {
+        System.out.println("Auditor " + nombre + " evaluando equipo...");
+
+        int riesgo = e.calcularRiesgoAcumulado();
+
+        System.out.println("Riesgo total acumulado: " + riesgo);
+
+        if (riesgo > 15) {
+            System.out.println("Recomendación: Aplicar parches urgentes y analizar superficie de ataque.");
+        } else {
+            System.out.println("Recomendación: Monitoreo regular.");
+        }
+    }
+}
+
+🧩 6. Clase Principal (flujo solicitado)
+public class Main {
+    public static void main(String[] args) {
+
+        // Registrar equipos
+        Equipo pc1 = new Equipo("Servidor Aplicaciones");
+        Equipo pc2 = new Equipo("Router Principal");
+
+        // Registrar vulnerabilidades por equipo
+        pc1.agregarVulnerabilidad(new VulnerabilidadSoftware(
+                "SQL Injection", 9, "Inyección de comandos SQL"
+        ));
+
+        pc1.agregarVulnerabilidad(new VulnerabilidadSoftware(
+                "Cross-Site Scripting", 5, "Script malicioso en navegador"
+        ));
+
+        pc2.agregarVulnerabilidad(new VulnerabilidadHardware(
+                "Buffer Overflow Firmware", 8, "Desbordamiento de memoria"
+        ));
+
+        // Mostrar vulnerabilidades
+        pc1.mostrarVulnerabilidades();
+        pc2.mostrarVulnerabilidades();
+
+        // Auditor evalúa riesgo total
+        Auditor auditor = new Auditor("Carlos Mendoza");
+
+        auditor.evaluarEquipo(pc1);
+        System.out.println();
+        auditor.evaluarEquipo(pc2);
+    }
+}
