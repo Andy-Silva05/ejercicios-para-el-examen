@@ -1,0 +1,198 @@
+Sistema de Detección de Intrusiones (IDS) Modul
+main:
+public class Main {
+    public static void main(String[] args) {
+
+        Sensor sensor = new Sensor("S1", "Data Center");
+        AnalistaSeguridad analista = new AnalistaSeguridad("Andrea");
+
+        EventoSeguridad e1 = new EventoRed(
+                1, "Tráfico sospechoso", 7,
+                "10.0.0.1", "10.0.0.5",
+                "Paquete TCP SYN", 128
+        );
+
+        EventoSeguridad e2 = new EventoAcceso(
+                2, "Intento de acceso fallido", 4,
+                "admin", "DENEGADO"
+        );
+
+        EventoSeguridad e3 = new EventoMalware(
+                3, "Troyano detectado", 9,
+                "TrojanX", "ALTA"
+        );
+
+        sensor.registrarEvento(e1);
+        sensor.registrarEvento(e2);
+        sensor.registrarEvento(e3);
+
+        System.out.println("=== LISTAR EVENTOS ===");
+        sensor.listarEventos();
+
+        System.out.println("=== FILTRAR CRITICIDAD >= 6 ===");
+        sensor.filtrarPorCriticidad(6);
+
+        System.out.println("=== ANALISTA REVISA ===");
+        analista.revisarEvento(e2);
+        analista.sugerirAccion(e2, "Bloquear usuario y auditar logs.");
+    }
+}
+clase analista seguridad:
+public class AnalistaSeguridad {
+
+    private String nombre;
+
+    public AnalistaSeguridad(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void revisarEvento(EventoSeguridad evento) {
+        System.out.println(nombre + " está revisando el evento:");
+        evento.mostrarDetalles();
+    }
+
+    public void sugerirAccion(EventoSeguridad evento, String accion) {
+        System.out.println("Acción sugerida por " + nombre + ": " + accion);
+    }
+}
+sensor:
+import java.util.ArrayList;
+
+public class Sensor {
+
+    private String idSensor;
+    private String ubicacion;
+    private ArrayList<EventoSeguridad> eventos;
+
+    public Sensor(String idSensor, String ubicacion) {
+        this.idSensor = idSensor;
+        this.ubicacion = ubicacion;
+        this.eventos = new ArrayList<>();
+    }
+
+    public void registrarEvento(EventoSeguridad evento) {
+        eventos.add(evento);
+    }
+
+    public void listarEventos() {
+        for (EventoSeguridad e : eventos) {
+            e.mostrarDetalles();
+            System.out.println("----------------------");
+        }
+    }
+
+    public void filtrarPorCriticidad(int nivel) {
+        for (EventoSeguridad e : eventos) {
+            if (e.getCriticidad() >= nivel) {
+                e.mostrarDetalles();
+                System.out.println("----------------------");
+            }
+        }
+    }
+}
+evento malware:
+public class EventoMalware extends EventoSeguridad {
+
+    private String nombreMalware;
+    private String nivelAmenaza;
+
+    public EventoMalware(int id, String descripcion, int criticidad,
+                         String nombreMalware, String nivelAmenaza) {
+        super(id, descripcion, criticidad);
+        this.nombreMalware = nombreMalware;
+        this.nivelAmenaza = nivelAmenaza;
+    }
+
+    @Override
+    public void mostrarDetalles() {
+        System.out.println("[EVENTO MALWARE]");
+        System.out.println("ID: " + id);
+        System.out.println("Malware detectado: " + nombreMalware);
+        System.out.println("Nivel de amenaza: " + nivelAmenaza);
+    }
+}
+eventoacceso:
+public class EventoAcceso extends EventoSeguridad {
+
+    private String usuario;
+    private String resultadoAcceso;
+
+    public EventoAcceso(int id, String descripcion, int criticidad,
+                        String usuario, String resultadoAcceso) {
+        super(id, descripcion, criticidad);
+        this.usuario = usuario;
+        this.resultadoAcceso = resultadoAcceso;
+    }
+
+    @Override
+    public void mostrarDetalles() {
+        System.out.println("[EVENTO ACCESO]");
+        System.out.println("ID: " + id);
+        System.out.println("Usuario: " + usuario);
+        System.out.println("Resultado: " + resultadoAcceso);
+    }
+}
+evento red:
+public class EventoRed extends EventoSeguridad {
+
+    private String ipOrigen;
+    private String ipDestino;
+    private PaqueteInspeccionado paquete;
+
+    public EventoRed(int id, String descripcion, int criticidad,
+                     String ipOrigen, String ipDestino,
+                     String contenidoPaquete, int tamanoPaquete) {
+
+        super(id, descripcion, criticidad);
+        this.ipOrigen = ipOrigen;
+        this.ipDestino = ipDestino;
+        this.paquete = new PaqueteInspeccionado(contenidoPaquete, tamanoPaquete);
+    }
+
+    @Override
+    public void mostrarDetalles() {
+        System.out.println("[EVENTO RED]");
+        System.out.println("ID: " + id);
+        System.out.println("Descripción: " + descripcion);
+        System.out.println("IP Origen: " + ipOrigen);
+        System.out.println("IP Destino: " + ipDestino);
+        paquete.mostrarPaquete();
+    }
+}
+paquete inspeccionado:
+public class PaqueteInspeccionado {
+    private String contenido;
+    private int tamano;
+
+    public PaqueteInspeccionado(String contenido, int tamano) {
+        this.contenido = contenido;
+        this.tamano = tamano;
+    }
+
+    public void mostrarPaquete() {
+        System.out.println("Contenido: " + contenido);
+        System.out.println("Tamaño: " + tamano + " bytes");
+    }
+}
+eventoseguridad:
+import java.util.Date;
+
+public abstract class EventoSeguridad {
+    protected int id;
+    protected String descripcion;
+    protected int criticidad;
+    protected Date fecha;
+
+    public EventoSeguridad(int id, String descripcion, int criticidad) {
+        this.id = id;
+        this.descripcion = descripcion;
+        this.criticidad = criticidad;
+        this.fecha = new Date();
+    }
+
+    public int getCriticidad() {
+        return criticidad;
+    }
+
+    public abstract void mostrarDetalles();
+}
