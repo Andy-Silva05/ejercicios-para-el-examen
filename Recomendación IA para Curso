@@ -1,0 +1,141 @@
+Clase abstracta Curso:
+public abstract class Curso {
+    protected String nombre;
+    protected String dificultad;
+
+    public Curso(String nombre, String dificultad) {
+        this.nombre = nombre;
+        this.dificultad = dificultad;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getDificultad() {
+        return dificultad;
+    }
+
+    @Override
+    public String toString() {
+        return nombre + " (" + dificultad + ")";
+    }
+}
+Subclases: CursoIA, CursoCiberseguridad, CursoMarketingDigital
+public class CursoIA extends Curso {
+    public CursoIA() {
+        super("Introducción a la Inteligencia Artificial", "Intermedio");
+    }
+}
+public class CursoCiberseguridad extends Curso {
+    public CursoCiberseguridad() {
+        super("Fundamentos de Ciberseguridad", "Avanzado");
+    }
+}
+public class CursoMarketingDigital extends Curso {
+    public CursoMarketingDigital() {
+        super("Marketing Digital desde Cero", "Básico");
+    }
+}
+clase usuario:
+import java.util.ArrayList;
+
+public class Usuario {
+    private String nombre;
+    private ArrayList<Curso> cursosRecomendados;
+
+    public Usuario(String nombre) {
+        this.nombre = nombre;
+        this.cursosRecomendados = new ArrayList<>();
+    }
+
+    public void agregarRecomendacion(Curso c) {
+        cursosRecomendados.add(c);
+    }
+
+    public ArrayList<Curso> getCursosRecomendados() {
+        return cursosRecomendados;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void mostrarRecomendaciones() {
+        System.out.println("Cursos recomendados para " + nombre + ":");
+        for (Curso c : cursosRecomendados) {
+            System.out.println("- " + c);
+        }
+    }
+
+    public boolean buscarCursoPorNombre(String nombreCurso) {
+        for (Curso c : cursosRecomendados) {
+            if (c.getNombre().equalsIgnoreCase(nombreCurso)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+Clase MotorRecomendacion
+public class MotorRecomendacion {
+    private Usuario usuario; // Asociación fuerte
+
+    public MotorRecomendacion(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public void procesarPreferencia(String palabraClave) {
+        palabraClave = palabraClave.toLowerCase();
+
+        if (palabraClave.contains("ia") || palabraClave.contains("inteligencia")) {
+            usuario.agregarRecomendacion(new CursoIA());
+        }
+
+        if (palabraClave.contains("ciber") || palabraClave.contains("seguridad")) {
+            usuario.agregarRecomendacion(new CursoCiberseguridad());
+        }
+
+        if (palabraClave.contains("marketing")) {
+            usuario.agregarRecomendacion(new CursoMarketingDigital());
+        }
+    }
+}
+main:
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Crear usuario
+        Usuario u1 = new Usuario("Carlos");
+
+        // Motor de recomendación (asociación fuerte)
+        MotorRecomendacion motor = new MotorRecomendacion(u1);
+
+        // Ingresar preferencia
+        System.out.print("Ingrese una palabra clave de interés (ia, ciberseguridad, marketing): ");
+        String preferencia = sc.nextLine();
+
+        motor.procesarPreferencia(preferencia);
+
+        // Mostrar recomendaciones
+        System.out.println();
+        u1.mostrarRecomendaciones();
+
+        // Buscar curso por nombre
+        System.out.print("\nBuscar curso recomendado por nombre: ");
+        String buscado = sc.nextLine();
+
+        boolean encontrado = u1.buscarCursoPorNombre(buscado);
+
+        if (encontrado) {
+            System.out.println("✔ El curso '" + buscado + "' está recomendado.");
+        } else {
+            System.out.println("✘ El curso '" + buscado + "' NO está en las recomendaciones.");
+        }
+
+        sc.close();
+    }
+}
