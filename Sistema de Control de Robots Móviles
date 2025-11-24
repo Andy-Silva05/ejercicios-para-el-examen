@@ -1,0 +1,198 @@
+1. Clase base: Robot (abstracta)
+
+Incluye la composición: MapaRuta existe solo dentro del robot.
+
+import java.util.ArrayList;
+
+public abstract class Robot {
+
+    protected String id;
+    protected double posX;
+    protected double posY;
+    protected MapaRuta mapaRuta;   // Composición
+
+    public Robot(String id, double posX, double posY) {
+        this.id = id;
+        this.posX = posX;
+        this.posY = posY;
+        this.mapaRuta = new MapaRuta(); // COMPOSICIÓN → se crea aquí
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public double getPosX() {
+        return posX;
+    }
+
+    public double getPosY() {
+        return posY;
+    }
+
+    // registrar rutas
+    public void agregarPuntoRuta(double x, double y) {
+        mapaRuta.agregarPunto(x, y);
+    }
+
+    // calcular distancia total recorrida
+    public double distanciaTotal() {
+        return mapaRuta.calcularDistancia();
+    }
+
+    public abstract void mostrarInfo();
+}
+
+🧩 2. Composición: Clase MapaRuta
+
+NO puede existir por fuera del robot.
+
+class MapaRuta {
+
+    private ArrayList<Punto> puntos;
+
+    public MapaRuta() {
+        puntos = new ArrayList<>();
+    }
+
+    public void agregarPunto(double x, double y) {
+        puntos.add(new Punto(x, y));
+    }
+
+    // Cálculo de distancia acumulada entre puntos consecutivos
+    public double calcularDistancia() {
+        if (puntos.size() < 2) return 0;
+
+        double total = 0;
+        for (int i = 1; i < puntos.size(); i++) {
+            Punto a = puntos.get(i - 1);
+            Punto b = puntos.get(i);
+            double dx = b.x - a.x;
+            double dy = b.y - a.y;
+            total += Math.sqrt(dx * dx + dy * dy);
+        }
+        return total;
+    }
+}
+
+📍 3. Clase auxiliar Punto
+
+(Puede ser interna o independiente)
+
+class Punto {
+    double x, y;
+
+    public Punto(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+🛫 4. Subclase: RobotAereo
+public class RobotAereo extends Robot {
+
+    private double altitud;
+
+    public RobotAereo(String id, double x, double y, double altitud) {
+        super(id, x, y);
+        this.altitud = altitud;
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("Robot Aéreo " + id + " - Pos(" + posX + "," + posY + ") Alt: " + altitud);
+    }
+}
+
+🚜 5. Subclase: RobotTerrestre
+public class RobotTerrestre extends Robot {
+
+    public RobotTerrestre(String id, double x, double y) {
+        super(id, x, y);
+    }
+
+    @Override
+    public void mostrarInfo() {
+        System.out.println("Robot Terrestre " + id + " - Pos(" + posX + "," + posY + ")");
+    }
+}
+
+🏢 6. Agregación: CentroControl (tiene robots)
+import java.util.ArrayList;
+
+public class CentroControl {
+
+    private ArrayList<Robot> robots;
+
+    public CentroControl() {
+        robots = new ArrayList<>();
+    }
+
+    public void agregarRobot(Robot r) {
+        robots.add(r);
+    }
+
+    public ArrayList<Robot> getRobots() {
+        return robots;
+    }
+
+    // Detectar robots fuera de rango (ej: distancia > 1000)
+    public void detectarFueraDeRango(double limite) {
+        for (Robot r : robots) {
+            double distancia = r.distanciaTotal();
+            if (distancia > limite) {
+                System.out.println("ALERTA: Robot " + r.getId() + " está fuera de rango (distancia " + distancia + ")");
+            }
+        }
+    }
+}
+
+👷 7. Asociación: Ingeniero
+
+Envía comandos, pero no posee a los robots.
+
+public class Ingeniero {
+    private String nombre;
+
+    public Ingeniero(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void enviarComando(Robot r, double nuevaX, double nuevaY) {
+        System.out.println("Ingeniero " + nombre + " ordena mover robot " + r.getId());
+        r.agregarPuntoRuta(nuevaX, nuevaY);
+    }
+}
+
+🧪 8. Clase Principal (flujo completo)
+public class Main {
+    public static void main(String[] args) {
+
+        CentroControl centro = new CentroControl();
+        Ingeniero ing = new Ingeniero("Carlos");
+
+        // Crear robots
+        Robot aereo = new RobotAereo("RA-01", 0, 0, 300);
+        Robot terrestre = new RobotTerrestre("RT-01", 10, 10);
+
+        // Agregarlos al centro (AGREGACIÓN)
+        centro.agregarRobot(aereo);
+        centro.agregarRobot(terrestre);
+
+        // Registrar rutas (COMPOSICIÓN: rutas dentro del robot)
+        ing.enviarComando(aereo, 50, 50);
+        ing.enviarComando(aereo, 80, 120);
+
+        ing.enviarComando(terrestre, 20, 20);
+        ing.enviarComando(terrestre, 40, 40);
+
+        // Mostrar info de robots
+        for (Robot r : centro.getRobots()) {
+            r.mostrarInfo();
+            System.out.println("Distancia recorrida: " + r.distanciaTotal());
+        }
+
+        // Detectar robots fuera de rango
+        centro.detectarFueraDeRango(100);
+    }
+}
