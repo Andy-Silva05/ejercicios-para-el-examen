@@ -1,0 +1,172 @@
+Clase abstracta Amenaza:
+import java.util.ArrayList;
+
+public abstract class Amenaza {
+    protected String nombre;
+    protected int nivelRiesgo;
+    protected ArrayList<Alerta> alertas; // Composición
+
+    public Amenaza(String nombre, int nivelRiesgo) {
+        this.nombre = nombre;
+        this.nivelRiesgo = nivelRiesgo;
+        this.alertas = new ArrayList<>();
+    }
+
+    // Método para generar alerta (composición)
+    public void crearAlerta(String recomendacion) {
+        Alerta a = new Alerta(recomendacion);
+        alertas.add(a);
+    }
+
+    public ArrayList<Alerta> getAlertas() {
+        return alertas;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getNivelRiesgo() {
+        return nivelRiesgo;
+    }
+
+    public abstract String tipoAmenaza();
+
+    @Override
+    public String toString() {
+        return tipoAmenaza() + " - " + nombre + " (Riesgo: " + nivelRiesgo + ")";
+    }
+}
+Subclases de Amenaza
+Malware
+public class Malware extends Amenaza {
+    public Malware(String nombre, int nivelRiesgo) {
+        super(nombre, nivelRiesgo);
+    }
+
+    @Override
+    public String tipoAmenaza() {
+        return "Malware";
+    }
+}
+
+Phishing
+public class Phishing extends Amenaza {
+    public Phishing(String nombre, int nivelRiesgo) {
+        super(nombre, nivelRiesgo);
+    }
+
+    @Override
+    public String tipoAmenaza() {
+        return "Phishing";
+    }
+}
+
+AtaqueDDoS
+public class AtaqueDDoS extends Amenaza {
+    public AtaqueDDoS(String nombre, int nivelRiesgo) {
+        super(nombre, nivelRiesgo);
+    }
+
+    @Override
+    public String tipoAmenaza() {
+        return "Ataque DDoS";
+    }
+}
+
+3. Clase Alerta (Composición con Amenaza)
+import java.time.LocalDateTime;
+
+public class Alerta {
+    private LocalDateTime fechaHora;
+    private String recomendacionAutomatica;
+
+    public Alerta(String recomendacionAutomatica) {
+        this.fechaHora = LocalDateTime.now();
+        this.recomendacionAutomatica = recomendacionAutomatica;
+    }
+
+    @Override
+    public String toString() {
+        return "Alerta generada: " + fechaHora +
+               " - Recomendación: " + recomendacionAutomatica;
+    }
+}
+
+4. Clase AnalistaSeguridad (Agregación con Amenaza)
+import java.util.ArrayList;
+
+public class AnalistaSeguridad {
+    private String nombre;
+    private ArrayList<Amenaza> amenazasDetectadas;
+
+    public AnalistaSeguridad(String nombre) {
+        this.nombre = nombre;
+        this.amenazasDetectadas = new ArrayList<>();
+    }
+
+    public void registrarAmenaza(Amenaza a) {
+        amenazasDetectadas.add(a);
+    }
+
+    public void generarAlerta(Amenaza a) {
+        if (a instanceof Malware) {
+            a.crearAlerta("Aislar archivo infectado y ejecutar antivirus.");
+        } else if (a instanceof Phishing) {
+            a.crearAlerta("Bloquear URL fraudulenta y advertir al usuario.");
+        } else if (a instanceof AtaqueDDoS) {
+            a.crearAlerta("Activar mitigación DDoS y redirigir tráfico.");
+        }
+    }
+
+    public boolean existeAmenazaTipo(Class<?> tipo) {
+        for (Amenaza a : amenazasDetectadas) {
+            if (tipo.isInstance(a)) return true;
+        }
+        return false;
+    }
+
+    public void mostrarAmenazasYAlertas() {
+        System.out.println("Amenazas registradas por " + nombre + ":");
+        for (Amenaza a : amenazasDetectadas) {
+            System.out.println("- " + a);
+            for (Alerta al : a.getAlertas()) {
+                System.out.println("    * " + al);
+            }
+        }
+    }
+}
+
+5. Clase Principal
+public class Main {
+    public static void main(String[] args) {
+
+        AnalistaSeguridad analista = new AnalistaSeguridad("Carlos López");
+
+        // Registrar amenazas
+        Amenaza m1 = new Malware("Trojan Zeus", 8);
+        Amenaza p1 = new Phishing("Email suplantado Banco XYZ", 5);
+        Amenaza d1 = new AtaqueDDoS("Flood TCP", 9);
+
+        analista.registrarAmenaza(m1);
+        analista.registrarAmenaza(p1);
+        analista.registrarAmenaza(d1);
+
+        // Generar alertas automáticas
+        analista.generarAlerta(m1);
+        analista.generarAlerta(p1);
+        analista.generarAlerta(d1);
+
+        // Consultar si hay cierto tipo de amenaza
+        System.out.println("¿Existe malware registrado? " +
+            analista.existeAmenazaTipo(Malware.class));
+
+        System.out.println("¿Existe ataque DDoS registrado? " +
+            analista.existeAmenazaTipo(AtaqueDDoS.class));
+
+        System.out.println();
+
+        // Mostrar amenazas y alertas generadas
+        analista.mostrarAmenazasYAlertas();
+    }
+}
